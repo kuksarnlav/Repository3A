@@ -1,105 +1,43 @@
 package bsu.rfe.java.group6.lab3.Kuksa.varA11;
-
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.PrintStream;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-
 
 public class HornersScheme extends JFrame {
-    private static final int WIDTH = 700;
-    private static final int HEIGHT = 500;
-
-    // Массив коэффициентов многочлена
-    private Double[] coefficients;
+    private static final int WIDTH = 700, HEIGHT = 500;
+    private Double[] coefficients; // Массив коэффициентов многочлена
     private JFileChooser fileChooser = null;
     private JMenuItem aboutMenuItem;
-    private JLabel aboutPhotoLabel;
-    private JLabel aboutNameTF;
-    private JButton githubLinkButton;
     private JMenuItem saveToTextMenuItem;
-    private JMenuItem saveToCSVMenuItem;
-    private JMenuItem colorClosestToPrimesMenuItem;
-
-    private JMenuItem colorClosestToSearchMenuItem;
-    private JTextField textFieldFrom;
-    private JTextField textFieldTo;
-    private JTextField textFieldStep;
+    private JMenuItem colorClosestToPrimesMenuItem, colorClosestToSearchMenuItem;
+    private JTextField textFieldFrom, textFieldTo, textFieldStep;
     private Box hBoxResult;
     private HornerTableCellRenderer renderer = new HornerTableCellRenderer();
-    private HornerTableModel data;
+    public static HornerTableModel data;
 
     public HornersScheme(Double[] coefficients) {
         super("Табулирование многочлена на отрезке по схеме Горнера");
         this.coefficients = coefficients;
         setSize(WIDTH, HEIGHT);
-        Toolkit kit = Toolkit.getDefaultToolkit();
-        setLocation((kit.getScreenSize().width - WIDTH) / 2, (kit.getScreenSize().height - HEIGHT) / 2);
-        JMenuBar menuBar = new JMenuBar();
-        setJMenuBar(menuBar);
-        JMenu aboutMenu = new JMenu("Справка");
-        menuBar.add(aboutMenu);
-        JMenu fileMenu = new JMenu("Файл");
-        menuBar.add(fileMenu);
-        JMenu tableMenu = new JMenu("Таблица");
-        menuBar.add(tableMenu);
+        JMenuBar menuBar = new JMenuBar(); setJMenuBar(menuBar);
+        JMenu aboutMenu = new JMenu("Справка"); menuBar.add(aboutMenu);
+        JMenu fileMenu = new JMenu("Файл"); menuBar.add(fileMenu);
+        JMenu tableMenu = new JMenu("Таблица"); menuBar.add(tableMenu);
 
+        // это Справка -> Автор
         Action aboutAction = new AbstractAction("Автор") {
             public void actionPerformed(ActionEvent event) {
-                JDialog dialog = new JDialog(HornersScheme.this, "Автор", true);
-                dialog.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-                dialog.setSize(515, 560);
-
-                aboutNameTF = new JLabel("Кузнецов Александр");
-                githubLinkButton = new JButton();
-                aboutPhotoLabel = new JLabel();
-                aboutPhotoLabel.setIcon(getImageFromGithubProfile("https://avatars.githubusercontent.com/u/90519481?v=4"));
-
-                githubLinkButton.setText("<HTML><FONT color=\"#000099\"><U>https://github.com/Sanb4ik</U></FONT></HTML>");
-                githubLinkButton.setHorizontalAlignment(SwingConstants.LEFT);
-                githubLinkButton.setBorderPainted(false);
-                githubLinkButton.setOpaque(false);
-                githubLinkButton.setBackground(Color.WHITE);
-                githubLinkButton.setToolTipText("github.com/Sanb4ik");
-                githubLinkButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent ae) {
-                        if (Desktop.isDesktopSupported()) {
-                            try {
-                                Desktop.getDesktop().browse(new URI("https://github.com/Sanb4ik"));
-                            } catch (IOException e) { /* TODO: error handling */ } catch (URISyntaxException ignored) {
-                            }
-                        }
-                    }
-                });
-
-                Box box = Box.createVerticalBox();
-                box.add(aboutPhotoLabel);
-                box.add(aboutNameTF);
-                box.add(githubLinkButton);
-
-                Box hbox = Box.createHorizontalBox();
-                hbox.add(Box.createHorizontalStrut(20));
-                hbox.add(box);
-
-                dialog.getContentPane().add(hbox);
-
-                dialog.setVisible(true);
+                String message = "Кукса Валерий \n6 группа";
+                JOptionPane.showMessageDialog(null, message, "Автор", JOptionPane.PLAIN_MESSAGE);
             }
         };
-
         aboutMenuItem = aboutMenu.add(aboutAction);
 
+        // это сохранение в txt формат
         Action saveToTextAction = new AbstractAction("Сохранить в текстовый файл") {
             public void actionPerformed(ActionEvent event) {
                 if (fileChooser == null) {
@@ -111,188 +49,135 @@ public class HornersScheme extends JFrame {
             }
         };
 
-
-
         saveToTextMenuItem = fileMenu.add(saveToTextAction);
         saveToTextMenuItem.setEnabled(false);
-        Action saveToCSV = new AbstractAction("Сохранить в CSV") {
 
-            public void actionPerformed(ActionEvent event) {
-                if (fileChooser == null) {
-                    fileChooser = new JFileChooser();
-                    fileChooser.setCurrentDirectory(new File("."));
-                }
-                if (fileChooser.showSaveDialog(HornersScheme.this) == JFileChooser.APPROVE_OPTION)
-                    saveToCSV(fileChooser.getSelectedFile());
-            }
-        };
-        saveToCSVMenuItem = fileMenu.add(saveToCSV);
-        saveToCSVMenuItem.setEnabled(false);
-
+        // это вероятнее всего закраска простых
         JCheckBoxMenuItem colorClosestToPrimesCB = new JCheckBoxMenuItem("Простые");
         Action colorClosestToPrimesAction = new AbstractAction() {
             public void actionPerformed(ActionEvent event){
                 renderer.setNeedle(colorClosestToPrimesCB.isSelected());
-                getContentPane().repaint();
+                getContentPane().repaint(); // Обновить таблицу
             }
         };
 
+        // это вероятнее всего закраска поиска
         JCheckBoxMenuItem colorClosestToSearch = new JCheckBoxMenuItem("Поиск");
         Action searchValueAction = new AbstractAction("Найти значение многочлена") {
             public void actionPerformed(ActionEvent event) {
                 // Запросить пользователя ввести искомую строку
-                String value =
-                        JOptionPane.showInputDialog(HornersScheme.this, "Введите значение для поиска",
-                                "Поиск значения", JOptionPane.QUESTION_MESSAGE);
-                // Установить введенное значение в качестве иголки
-                renderer.setNeedle(value);
-                // Обновить таблицу
-                getContentPane().repaint();
+                String value = JOptionPane.showInputDialog(HornersScheme.this,
+                        "Введите значение для поиска", "Поиск значения", JOptionPane.QUESTION_MESSAGE);
+                renderer.setNeedle(value); // Установить введенное значение в качестве иголки
+                getContentPane().repaint(); // Обновить таблицу
             }
         };
         colorClosestToPrimesCB.addActionListener(colorClosestToPrimesAction);
         colorClosestToSearch.addActionListener(searchValueAction);
-
 
         colorClosestToPrimesMenuItem = tableMenu.add(colorClosestToPrimesCB);
         colorClosestToSearchMenuItem = tableMenu.add(colorClosestToSearch);
         colorClosestToSearchMenuItem.setEnabled(false);
         colorClosestToPrimesMenuItem.setEnabled(false);
 
-        JLabel labelForFrom = new JLabel("X изменяется на интервале от:");
+        // это описание коробки ввода
+        JLabel labelFrom = new JLabel("X изменяется на интервале от:");
         textFieldFrom = new JTextField("0.0", 10);
-        textFieldFrom.setMaximumSize(textFieldFrom.getPreferredSize());
-        JLabel labelForTo = new JLabel("до:");
+        textFieldFrom.setMaximumSize(textFieldFrom.getPreferredSize()); // это сжатие по вертикали
+        JLabel labelTo = new JLabel("до:");
         textFieldTo = new JTextField("1.0", 10);
-        textFieldTo.setMaximumSize(textFieldTo.getPreferredSize());
-        JLabel labelForStep = new JLabel("с шагом:");
+        textFieldTo.setMaximumSize(textFieldTo.getPreferredSize()); // это сжатие по вертикали
+        JLabel labelStep = new JLabel("с шагом:");
         textFieldStep = new JTextField("0.1", 10);
-        textFieldStep.setMaximumSize(textFieldStep.getPreferredSize());
+        textFieldStep.setMaximumSize(textFieldStep.getPreferredSize()); // это сжатие по вертикали
+
+        // это вставка элементов КОРОБКИ ВВОДА в контейнер (коробку)
         Box hboxRange = Box.createHorizontalBox();
         hboxRange.setBorder(BorderFactory.createBevelBorder(1));
-        hboxRange.add(Box.createHorizontalGlue());
-        hboxRange.add(labelForFrom);
-        hboxRange.add(Box.createHorizontalStrut(10));
-        hboxRange.add(textFieldFrom);
-        hboxRange.add(Box.createHorizontalStrut(20));
-        hboxRange.add(labelForTo);
-        hboxRange.add(Box.createHorizontalStrut(10));
-        hboxRange.add(textFieldTo);
-        hboxRange.add(Box.createHorizontalStrut(20));
-        hboxRange.add(labelForStep);
-        hboxRange.add(Box.createHorizontalStrut(10));
+        //
+        hboxRange.add(Box.createHorizontalGlue()); // это клей левой стороны коробки
+        hboxRange.add(labelFrom); hboxRange.add(Box.createHorizontalStrut(10)); // распорка шириной 10
+        hboxRange.add(textFieldFrom); hboxRange.add(Box.createHorizontalStrut(10)); // распорка шириной 10
+        hboxRange.add(labelTo); hboxRange.add(Box.createHorizontalStrut(10)); // распорка шириной 10
+        hboxRange.add(textFieldTo); hboxRange.add(Box.createHorizontalStrut(10)); // распорка шириной 10
+        hboxRange.add(labelStep); hboxRange.add(Box.createHorizontalStrut(10)); // распорка шириной 10
         hboxRange.add(textFieldStep);
-        hboxRange.add(Box.createHorizontalGlue());
-        hboxRange.setPreferredSize(new Dimension((int) hboxRange.getMaximumSize().getWidth(), (int) (hboxRange.getMinimumSize().getHeight()) * 2));
-        getContentPane().add(hboxRange, BorderLayout.SOUTH);
-        JButton buttonCalc = new JButton("Вычислить");
+        hboxRange.add(Box.createHorizontalGlue()); // это клей правой стороны коробки
+        //
+        hboxRange.setPreferredSize(new Dimension((int) hboxRange.getMaximumSize().getWidth(),
+                (int) (hboxRange.getMinimumSize().getHeight()) * 2)); // это толщина коробки
+
+
+        JButton buttonCalc = new JButton("Вычислить"); // рождение кнопки "Вычислить"
         buttonCalc.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ev) {
                 try {
+                    // перевод текста String поля ввода в double
                     Double from = Double.parseDouble(textFieldFrom.getText());
                     Double to = Double.parseDouble(textFieldTo.getText());
                     Double step = Double.parseDouble(textFieldStep.getText());
                     data = new HornerTableModel(from, to, step, HornersScheme.this.coefficients);
                     JTable table = new JTable(data);
                     table.setDefaultRenderer(Double.class, renderer);
-                    table.setRowHeight(30);
+                    table.setRowHeight(25); // ширина столбца таблицы
                     hBoxResult.removeAll();
                     hBoxResult.add(new JScrollPane(table));
                     getContentPane().validate();
                     saveToTextMenuItem.setEnabled(true);
-                    saveToCSVMenuItem.setEnabled(true);
                     colorClosestToPrimesMenuItem.setEnabled(true);
                     colorClosestToSearchMenuItem.setEnabled(true);
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(HornersScheme.this, "Ошибка в формате записи числа с плавающей точкой", "Ошибочный формат числа", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(
+                            HornersScheme.this, "Ошибка в формате записи числа с плавающей точкой",
+                            "Ошибочный формат числа", JOptionPane.WARNING_MESSAGE); // ввод не числа
                 }
             }
         });
-        JButton buttonReset = new JButton("Очистить поля");
+
+        JButton buttonReset = new JButton("Очистить поля"); // рождение кнопки "Очистить поля"
         buttonReset.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ev) {
-                textFieldFrom.setText("0.0");
-                textFieldTo.setText("1.0");
-                textFieldStep.setText("0.1");
+                textFieldFrom.setText("0.0"); textFieldTo.setText("1.0"); textFieldStep.setText("0.1");                      // начальные параметры
                 hBoxResult.removeAll();
-                hBoxResult.add(new JPanel());
-                saveToTextMenuItem.setEnabled(false);
-                saveToCSVMenuItem.setEnabled(false);
-                colorClosestToPrimesMenuItem.setEnabled(false);
-                getContentPane().validate();
+                hBoxResult.add(new JPanel()); // без этой строки очищение не происходит
+                saveToTextMenuItem.setEnabled(false); // закрываем возможность нажать кнопку
+                colorClosestToPrimesMenuItem.setEnabled(false); // закрываем возможность нажать чекбокс
+                colorClosestToSearchMenuItem.setEnabled(false); // закрываем возможность нажать чекбокс
+                getContentPane().validate(); // без этой строки очищение нке происходит
             }
         });
-        Box hboxButtons = Box.createHorizontalBox();
+
+        Box hboxButtons = Box.createHorizontalBox(); // кнопки выстраиваются в ряд, а не столбец, как с VerticalBox
         hboxButtons.setBorder(BorderFactory.createBevelBorder(1));
+        // add это добавление клея и кнопок
         hboxButtons.add(Box.createHorizontalGlue());
         hboxButtons.add(buttonCalc);
-        hboxButtons.add(Box.createHorizontalStrut(30));
+        hboxButtons.add(Box.createHorizontalStrut(30)); // расстояние между кнопками 30
         hboxButtons.add(buttonReset);
         hboxButtons.add(Box.createHorizontalGlue());
         hboxButtons.setPreferredSize(new Dimension((int) hboxButtons.getMaximumSize().getWidth(), (int) hboxButtons.getMinimumSize().getHeight() * 2));
-        getContentPane().add(hboxButtons, BorderLayout.NORTH);
         hBoxResult = Box.createHorizontalBox();
         hBoxResult.add(new JPanel());
-        getContentPane().add(hBoxResult, BorderLayout.CENTER);
-    }
 
-    private ImageIcon getImageFromGithubProfile(String strUrl) {
-        URL url = null;
-        try {
-            url = new URL(strUrl);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(url);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return new ImageIcon(image);
+        getContentPane().add(hboxRange, BorderLayout.NORTH); // эта штука и добавляет наше поля ввода вверх
+        getContentPane().add(hboxButtons, BorderLayout.SOUTH); // а эта штука добавляет наши кнопки вниз
+        getContentPane().add(hBoxResult, BorderLayout.CENTER); // а эта штука соответсвенно ставит результат в центр
     }
 
     protected void saveToTextFile(File selectedFile) {
-        try {
+        try { // это по факту просто String message и всё
             PrintStream out = new PrintStream(selectedFile);
-            out.println("Результаты табулирования многочлена по схеме Горнера");
-            out.print("Многочлен: ");
-
+            out.print("y = ");
             for (int i = coefficients.length - 1; i > 0; i--) {
-                out.print(coefficients[i].toString() + "*X^" + i + " ");
+                out.print(coefficients[i].toString() + "x^" + i + " + ");
             }
             out.println(coefficients[0]);
-
-            out.println("");
-            out.println("Интервал от " + data.getFrom() + " до " + data.getTo() + " с шагом " + data.getStep());
-            out.println("====================================================");
+            out.println(""); // эквивалент \n
+            out.println("[" + data.getFrom() + " ; " + data.getTo() + "]  шаг: " + data.getStep());
             for (int i = 0; i < data.getRowCount(); i++) {
-                out.println("Значение в точке " + data.getValueAt(i, 0) + " равно " + data.getValueAt(i, 1) + ". С функцией Math.pow() равно " + data.getValueAt(i, 2) + ". Разница между ними " + data.getValueAt(i, 3));
+                out.println("x: " + data.getValueAt(i, 0) + " y: " + data.getValueAt(i, 1));
             }
             out.close();
-        } catch (FileNotFoundException ignored) {
-        }
+        } catch (FileNotFoundException ignored) {}
     }
-
-    protected void saveToCSV(File selectedFile) {
-        try {
-            PrintStream out = new PrintStream(selectedFile);
-
-            for (int i = 0; i < 4; i++) {
-                out.print(data.getColumnName(i) + ";");
-            }
-            out.println(";");
-//            CSVWriter writer = new CSVWriter(out);
-            for (int i = 0; i < data.getRowCount(); i++) {
-                out.println(data.getValueAt(i, 0) + ";" + data.getValueAt(i, 1) + ";" + data.getValueAt(i, 2) + ";" + data.getValueAt(i, 3));
-            }
-            out.close();
-        } catch
-        (FileNotFoundException ignored) {
-        }
-    }
-
-
 }
