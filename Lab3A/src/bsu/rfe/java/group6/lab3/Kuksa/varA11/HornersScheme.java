@@ -3,9 +3,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintStream;
+import java.io.*;
 
 public class HornersScheme extends JFrame {
     private static final int WIDTH = 700, HEIGHT = 500;
@@ -13,6 +11,9 @@ public class HornersScheme extends JFrame {
     private JFileChooser fileChooser = null;
     private JMenuItem aboutMenuItem;
     private JMenuItem saveToTextMenuItem;
+
+    private JMenuItem saveToGraphicsMenuItem;
+
     private JMenuItem colorClosestToPrimesMenuItem, colorClosestToSearchMenuItem;
     private JTextField textFieldFrom, textFieldTo, textFieldStep;
     private Box hBoxResult;
@@ -31,7 +32,7 @@ public class HornersScheme extends JFrame {
         // это Справка -> Автор
         Action aboutAction = new AbstractAction("Автор") {
             public void actionPerformed(ActionEvent event) {
-                String message = "Кукса Валерий \n6 группа";
+                String message = "Кукса Валерий\n6 группа";
                 JOptionPane.showMessageDialog(null, message, "Автор", JOptionPane.PLAIN_MESSAGE);
             }
         };
@@ -48,11 +49,29 @@ public class HornersScheme extends JFrame {
                     saveToTextFile(fileChooser.getSelectedFile());
             }
         };
-
         saveToTextMenuItem = fileMenu.add(saveToTextAction);
         saveToTextMenuItem.setEnabled(false);
 
-        // это вероятнее всего закраска простых
+        // этот bin файл
+        saveToTextMenuItem = fileMenu.add(saveToTextAction); // Добавить соответствующий пункт подменю в меню "Файл"
+        saveToTextMenuItem.setEnabled(false); // По умолчанию пункт меню является недоступным (данных ещѐ нет)
+        // Создать новое "действие" по сохранению в текстовый файл
+        Action saveToGraphicsAction = new AbstractAction("Сохранить данные для построения графика") {
+        public void actionPerformed(ActionEvent event) {
+            if (fileChooser == null) {
+                fileChooser = new JFileChooser(); // Если экземпляр диалогового окна "Открыть файл" ещѐ не создан, то создать его
+                fileChooser.setCurrentDirectory(new File("."));// и инициализировать текущей директорией
+            }
+            if (fileChooser.showSaveDialog(HornersScheme.this) == JFileChooser.APPROVE_OPTION); // Показать диалоговое окно. ! вместо HornersScheme был MainFrame
+            saveToGraphicsFile(fileChooser.getSelectedFile()); // Если результат его показа успешный, сохранить данные в двоичный файл
+        }
+    };
+    saveToGraphicsMenuItem = fileMenu.add(saveToGraphicsAction); // Добавить соответствующий пункт подменю в меню "Файл"
+        saveToGraphicsMenuItem.setEnabled(true); // По умолчанию пункт меню является недоступным(данных ещѐ нет)
+        //
+
+
+    // это вероятнее всего закраска простых
         JCheckBoxMenuItem colorClosestToPrimesCB = new JCheckBoxMenuItem("Простые");
         Action colorClosestToPrimesAction = new AbstractAction() {
             public void actionPerformed(ActionEvent event){
@@ -180,4 +199,17 @@ public class HornersScheme extends JFrame {
             out.close();
         } catch (FileNotFoundException ignored) {}
     }
+
+    protected void saveToGraphicsFile(File selectedFile) {
+        try {
+            DataOutputStream out = new DataOutputStream(new FileOutputStream(selectedFile)); // Создать новый байтовый поток вывода, направленный в указанный файл
+            // Записать в поток вывода попарно значение X в точке, значение многочлена в точке
+            for (int i = 0; i < data.getRowCount(); i++) {
+                out.writeDouble((Double)data.getValueAt(i,0));
+                out.writeDouble((Double)data.getValueAt(i,1));
+            }
+            out.close(); // Закрыть поток вывода
+        } catch (Exception e) {} // Исключительную ситуацию "ФайлНеНайден" в данном случае можно не обрабатывать, т.к мы файл создаѐм, а не открываем для чтения
+    }
+
 }

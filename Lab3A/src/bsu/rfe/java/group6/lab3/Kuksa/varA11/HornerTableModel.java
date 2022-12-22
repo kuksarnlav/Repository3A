@@ -39,14 +39,22 @@ public class HornerTableModel extends AbstractTableModel {
         return switch (col) {
             case 0 ->  "Значение X";
             case 1 -> "Значение многочлена";
-            case 2 -> "Дробная часть";
+            case 2 -> "Точное значение?";
             default -> "";
         };
     }
 
-    public Class<?> getColumnClass(int col) { return Double.class; }
+    //public Class<?> getColumnClass(int col) { return Double.class; }
+    public Class<?> getColumnClass(int col) {
+        switch (col) {
+            case 0,1: return Double.class;
+            case 2: return Boolean.class;
+            default: return String.class;
+        }
+    }
 
-    private double calculateDif(double x){
+
+/*    private double calculateDif(double x){
         double cellValue;
         int integralPart; double difference;
         for (int i = 0; i < data.getRowCount(); i++) {
@@ -58,9 +66,9 @@ public class HornerTableModel extends AbstractTableModel {
             }
         }
         return 0;
-    }
+    }*/
 
-/*    private boolean calculateDif(double x){
+    private boolean calculateDif(double x){
         double cellValue;
         int integralPart; double difference;
         for (int i = 0; i < data.getRowCount(); i++) {
@@ -72,7 +80,7 @@ public class HornerTableModel extends AbstractTableModel {
             }
         }
         return false;
-    }*/
+    }
 
     private double calculateHorner(double x){
         Double b = coefficients[coefficients.length-1];

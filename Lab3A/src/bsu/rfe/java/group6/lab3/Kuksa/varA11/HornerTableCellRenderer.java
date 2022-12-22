@@ -41,8 +41,9 @@ public class HornerTableCellRenderer implements TableCellRenderer {
             double actual_value = Double.parseDouble(formattedDouble);
             long closet_int_value =  Math.round(actual_value);
             if (Math.abs(actual_value - closet_int_value) < 0.1 && isPrime(closet_int_value)){
-                panel.setBackground(Color.YELLOW); // если близко к простому то крашу
+                panel.setBackground(Color.YELLOW); // это цвет простых чисел
             }
+            if (col == 1 && needle1 != null && needle1.equals(formattedDouble)) { panel.setBackground(Color.RED); }
         }
         return panel;
     }
